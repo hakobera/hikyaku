@@ -35,7 +35,7 @@ LICENSE
 
 	(The MIT License)
 
-	Copyright (c) 2011 Kazuyuki Honda
+	Copyright (c) 2011 Kazuyuki Honda <hakobera@gmail.com>
 
 	Permission is hereby granted, free of charge, to any person obtaining
 	a copy of this software and associated documentation files (the
