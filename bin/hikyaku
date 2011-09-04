@@ -9,6 +9,10 @@ var hikyaku = require('../')
 
 var HIKYAKU_ROOT = path.join(__dirname + '/..');
 
+process.on('uncaughtException', function(err) {
+	abort(err);
+});
+
 program
 	.version(hikyaku.version)
 	.option('-c, --config <configfile>', 'set config path [./config.json]')
@@ -37,10 +41,11 @@ log.info('plugindir: ' + program.plugindir);
 
 // Read conf and execute it
 (function(config) {
-	var conf = fs.readFileSync(config, 'utf8');
-	var modules = JSON.parse(conf);
+	var conf = fs.readFileSync(config, 'utf8')
+		, moduleDefs = JSON.parse(conf)
+		, modules = [];
 
-	async.reduce(modules, {}, function(data, moduleDef, callback) {
+	async.reduce(moduleDefs, {}, function(data, moduleDef, callback) {
 		var moduleName = moduleDef.module,
 				module, modulePath, moduleContext;
 
@@ -48,14 +53,19 @@ log.info('plugindir: ' + program.plugindir);
 			abort('module name is required');
 		}
 
-		log.info('Execute ' + moduleName + ' start');
-
 		modulePath = getModulePath(moduleDef);
-		module = require(modulePath);
-		log.debug('module found at ' + modulePath);
+		if (!path.existsSync(modulePath + '.js')) {
+			abort(modulePath + ' not found');
+		}
+		try {
+			module = require(modulePath);
+			log.debug('module found at ' + modulePath);
 
-		module.exec(moduleDef.config, data, callback);
-
+			log.info('Execute ' + moduleName + ' start');
+			module.exec(moduleDef.config, data, callback);
+		} catch (e) {
+			abort(e);
+		}
 	}, function(err, result) {
 		if (err) {
 			abort(err);
@@ -85,5 +95,6 @@ function getModulePath(moduleDef) {
  */
 function abort(message) {
 	console.error(message);
+	console.error('aborted');
 	process.exit(1);
 }
