@@ -1,0 +1,16 @@
+{
+		"name": "hikyaku"
+	,	"description": "Plagger inspired pluggable feed aggregator"
+	,	"version": "0.0.1"
+	,	"author": "Kazuyuki Honda <hakobera@gmail.com>"
+	,	"dependencies": {
+			"commander": "0.1.0"
+		,	"async": "0.1.9"
+		,	"log4js": "0.3.8"
+	}
+	,	"devDependencies": {
+	}
+	,	"main": "index"
+	,	"bin": { "hikyaku": "./bin/hikyaku" }
+	,	"engines": { "node": ">= 0.4.9 < 0.7.0" }
+}

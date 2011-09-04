@@ -1,0 +1,89 @@
+#!/usr/bin/env node
+
+var hikyaku = require('../')
+	, path = require('path')
+	, fs = require('fs')
+	, program = require('commander')
+	, async = require('async')
+	, log4js = require('log4js');
+
+var HIKYAKU_ROOT = path.join(__dirname + '/..');
+
+program
+	.version(hikyaku.version)
+	.option('-c, --config <configfile>', 'set config path [./config.json]')
+	.option('-p, --plugindir <plugindir>', 'set plugin directory path [./plugins]')
+	.option('-L, --debug', 'enable debug logging')
+	.parse(process.argv);
+
+// Config file
+program.config = program.config || './config.json'
+
+// Plugin base directory
+program.plugindir = program.plugindir || './plugins'
+
+log = log4js.getLogger('hikyaku');
+clog = log4js.getLogger('console');
+if (program.debug) {
+	log.setLevel('DEBUG');
+	clog.setLevel('DEBUG');
+} else {
+	log.setLevel('INFO');
+	clog.setLevel('INFO');
+}
+
+log.info('configfile: ' + program.config);
+log.info('plugindir: ' + program.plugindir);
+
+// Read conf and execute it
+(function(config) {
+	var conf = fs.readFileSync(config, 'utf8');
+	var modules = JSON.parse(conf);
+
+	async.reduce(modules, {}, function(data, moduleDef, callback) {
+		var moduleName = moduleDef.module,
+				module, modulePath, moduleContext;
+
+		if (!moduleName || moduleName.length === 0) {
+			abort('module name is required');
+		}
+
+		log.info('Execute ' + moduleName + ' start');
+
+		modulePath = getModulePath(moduleDef);
+		module = require(modulePath);
+		log.debug('module found at ' + modulePath);
+
+		module.exec(moduleDef.config, data, callback);
+
+	}, function(err, result) {
+		if (err) {
+			abort(err);
+		}
+	});
+})(program.config);
+
+/**
+ * Parse module name, and convert it to module path.
+ *
+ * @param {Object} moduleDef
+ * @return {String} module path
+ */
+function getModulePath(moduleDef) {
+	var plugindir = program.plugindir;
+	if (plugindir.substring(0, 1) !== '/') {
+		plugindir = path.join(HIKYAKU_ROOT, plugindir);
+	}
+	var modulePath = moduleDef.module.replace('.', '/');
+	return path.join(plugindir, modulePath);
+}
+
+/**
+ * Exit with the given message.
+ *
+ * @param {String} message
+ */
+function abort(message) {
+	console.error(message);
+	process.exit(1);
+}
