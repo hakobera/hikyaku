@@ -39,7 +39,7 @@ if (program.debug) {
 log.info('configfile: ' + program.config);
 log.info('plugindir: ' + program.plugindir);
 
-// Read conf and execute it
+// Read config file and execute it.
 (function(config) {
 	var conf = fs.readFileSync(config, 'utf8')
 		, moduleDefs = JSON.parse(conf)
@@ -57,10 +57,10 @@ log.info('plugindir: ' + program.plugindir);
 		if (!path.existsSync(modulePath + '.js')) {
 			abort(modulePath + ' not found');
 		}
+
+		log.debug('module found at ' + modulePath);
 		try {
 			module = require(modulePath);
-			log.debug('module found at ' + modulePath);
-
 			log.info('Execute ' + moduleName + ' start');
 			module.exec(moduleDef.config, data, callback);
 		} catch (e) {
