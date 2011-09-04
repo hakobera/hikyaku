@@ -1,6 +1,4 @@
-var vm = require('vm')
-  , util = require('util')
-  , async = require('async');
+var async = require('async');
 
 exports.exec = function(config, data, callback) {
   var $ = data.$
