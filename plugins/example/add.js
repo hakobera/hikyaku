@@ -1,12 +1,12 @@
-exports.exec = function(context, data, callback) {
-  var v = context.config.value;
+exports.exec = function(config, data, callback) {
+  var v = config.value;
   var sum = parseFloat(data);
   if (isNaN(sum)) {
     sum = 0;
   }
   sum += parseFloat(v);
 
-  context.log.info('sum = %s', sum);
+  console.debug('sum = %s', sum);
   
   callback(null, sum);
 };

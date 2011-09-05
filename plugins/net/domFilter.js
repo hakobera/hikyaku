@@ -11,10 +11,9 @@ exports.exec = function(config, data, callback) {
   var items  = $(selector).toArray();
 
   if (mapCallback) {
-    var fn = eval('var f = function(it) { var item = $(it); ' + mapCallback + ' }; f;');
     async.map(items, function(item, next) {
       try {
-        var v = fn(item);
+        var v = mapCallback($(item));
         next(null, v);
       } catch (e) {
         next(e);

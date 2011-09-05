@@ -1,17 +1,7 @@
 #!/usr/bin/env node
 
 var hikyaku = require('../')
-	, path = require('path')
-	, fs = require('fs')
-	, program = require('commander')
-	, async = require('async')
-	, log4js = require('log4js');
-
-var HIKYAKU_ROOT = path.join(__dirname + '/..');
-
-process.on('uncaughtException', function(err) {
-	abort(err);
-});
+	, program = require('commander');
 
 program
 	.version(hikyaku.version)
@@ -26,75 +16,10 @@ program.config = program.config || './config.json'
 // Plugin base directory
 program.plugindir = program.plugindir || './plugins'
 
-log = log4js.getLogger('hikyaku');
-clog = log4js.getLogger('console');
-if (program.debug) {
-	log.setLevel('DEBUG');
-	clog.setLevel('DEBUG');
-} else {
-	log.setLevel('INFO');
-	clog.setLevel('INFO');
-}
+var runner = new hikyaku.createRunner({
+		config: program.config
+	,	plugindir: program.plugindir
+	, debug: program.debug
+});
 
-log.info('configfile: ' + program.config);
-log.info('plugindir: ' + program.plugindir);
-
-// Read config file and execute it.
-(function(config) {
-	var conf = fs.readFileSync(config, 'utf8')
-		, moduleDefs = JSON.parse(conf)
-		, modules = [];
-
-	async.reduce(moduleDefs, {}, function(data, moduleDef, callback) {
-		var moduleName = moduleDef.module,
-				module, modulePath, moduleContext;
-
-		if (!moduleName || moduleName.length === 0) {
-			abort('module name is required');
-		}
-
-		modulePath = getModulePath(moduleDef);
-		if (!path.existsSync(modulePath + '.js')) {
-			abort(modulePath + ' not found');
-		}
-
-		log.debug('module found at ' + modulePath);
-		try {
-			module = require(modulePath);
-			log.info('Execute ' + moduleName + ' start');
-			module.exec(moduleDef.config, data, callback);
-		} catch (e) {
-			abort(e);
-		}
-	}, function(err, result) {
-		if (err) {
-			abort(err);
-		}
-	});
-})(program.config);
-
-/**
- * Parse module name, and convert it to module path.
- *
- * @param {Object} moduleDef
- * @return {String} module path
- */
-function getModulePath(moduleDef) {
-	var plugindir = program.plugindir;
-	if (plugindir.substring(0, 1) !== '/') {
-		plugindir = path.join(HIKYAKU_ROOT, plugindir);
-	}
-	var modulePath = moduleDef.module.replace('.', '/');
-	return path.join(plugindir, modulePath);
-}
-
-/**
- * Exit with the given message.
- *
- * @param {String} message
- */
-function abort(message) {
-	console.error(message);
-	console.error('aborted');
-	process.exit(1);
-}
+runner.run();
